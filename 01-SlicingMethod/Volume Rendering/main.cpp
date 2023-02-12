@@ -5,8 +5,6 @@
 #include <algorithm>
 
 
-
-
 #ifdef _DEBUG 
 #pragma comment(lib,"opengl32.lib")//for linking
 #pragma comment(lib,"glew32.lib")//for linking
@@ -17,6 +15,7 @@
 const int WIDTH = 1920;
 const int HEIGHT = 1080;
 
+using namespace std;
 
 
 
