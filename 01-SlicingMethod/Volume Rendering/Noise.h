@@ -13,7 +13,7 @@
 void init3DNoiseTexture(int texSize, GLubyte* texPtr);
 void make3DNoiseTexture();
 GLubyte* ptr;
-int Noise3DTexSize = 64;
+int Noise3DTexSize = 128;
 GLubyte* Noise3DTexPtr;
 
 #define MAXB 0x100

@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\Github\PerlinNoise - Volumetric\Volumetric-Perlin-Noise-\01-SlicingMethod\Volume Rendering\externals\freeglut-2.8.1\include;E:\Github\PerlinNoise - Volumetric\Volumetric-Perlin-Noise-\01-SlicingMethod\Volume Rendering\externals\glew-1.10.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Github\PerlinNoise - Volumetric\Volumetric-Perlin-Noise-\01-SlicingMethod\Volume Rendering\externals\freeglut-2.8.1\include;E:\Github\PerlinNoise - Volumetric\Volumetric-Perlin-Noise-\01-SlicingMethod\Volume Rendering\externals\glew-1.10.0\include;E:\Github\PerlinNoise - Volumetric\Volumetric-Perlin-Noise-\01-SlicingMethod\Volume Rendering\externals\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,6 +132,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

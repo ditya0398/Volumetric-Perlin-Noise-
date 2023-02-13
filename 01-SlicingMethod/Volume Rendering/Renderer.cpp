@@ -63,6 +63,10 @@ void Renderer::CompileShader(GLenum type, const string& source) {
 	_shaders[_totalShaders++] = shader;
 }
 
+void Renderer::AddAttribute(const string& attribute) {
+	_attributeList[attribute] = glGetAttribLocation(_program, attribute.c_str());
+}
+
 
 void Renderer::CreateAndLinkProgram() {
 	_program = glCreateProgram();

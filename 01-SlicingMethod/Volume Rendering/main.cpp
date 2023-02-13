@@ -1,43 +1,41 @@
+
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <iostream>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <iostream>
+#include "Renderer.h"
 #include <fstream>
 #include <algorithm>
-#include "Renderer.h"
-#include "Noise.h"
+#include"Noise.h"
 
-
+//for floating point inaccuracy
 const float EPSILON = 0.0001f;
+
 #ifdef _DEBUG 
-#pragma comment(lib,"opengl32.lib")//for linking
-#pragma comment(lib,"glew32.lib")//for linking
-#pragma comment(lib, "freeglut_static_x86_d.lib")
+#pragma comment(lib,"opengl32.lib")
+#pragma comment(lib,"glew32.lib")//glew wrangler library dynamically linked
+#pragma comment(lib, "freeglut_static_x86_d.lib") //linked statically
+#pragma comment(lib, "SOIL_static_x86_d.lib") //linked statically
 #else
 #pragma comment(lib, "glew_static_x86.lib")
+#pragma comment(lib, "freeglut_static_x86.lib")
+#pragma comment(lib, "SOIL_static_x86.lib")
 #endif
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+
 using namespace std;
+
+//screen dimensions
+const int WIDTH = 1280;
+const int HEIGHT = 960;
 
 //camera transform variables
 int state = 0, oldX = 0, oldY = 0;
 float rX = 4, rY = 50, dist = -2;
 
-
-//maximum number of slices
-const int MAX_SLICES = 512;
-
-//sliced vertices
-glm::vec3 vTextureSlices[MAX_SLICES * 12];
-
-//dimensions of volume data
-const int XDIM = 256;
-const int YDIM = 256;
-const int ZDIM = 256;
 
 
 //modelview and projection matrices
@@ -47,7 +45,26 @@ glm::mat4 MV, P;
 GLuint volumeVBO;
 GLuint volumeVAO;
 
+//3D texture slicing shader
 Renderer render;
+
+//maximum number of slices
+const int MAX_SLICES = 512;
+
+//sliced vertices
+glm::vec3 vTextureSlices[MAX_SLICES * 12];
+
+//background colour
+glm::vec4 bg = glm::vec4(0.5, 0.5, 1, 1);
+
+//volume data files
+const std::string volume_file = "../media/Engine256.raw";
+
+//dimensions of volume data
+const int XDIM = 128;
+const int YDIM = 128;
+const int ZDIM = 128;
+
 //total number of slices current used
 int num_slices = 0;
 GLuint delta;
@@ -84,6 +101,42 @@ const int edges[12][2] = { {0,1},{1,2},{2,3},{3,0},{0,4},{1,5},{2,6},{3,7},{4,5}
 //current viewing direction
 glm::vec3 viewDir;
 
+
+//mouse down event handler
+void OnMouseDown(int button, int s, int x, int y)
+{
+	if (s == GLUT_DOWN)
+	{
+		oldX = x;
+		oldY = y;
+	}
+
+	if (button == GLUT_MIDDLE_BUTTON)
+		state = 0;
+	else
+		state = 1;
+
+	if (s == GLUT_UP)
+		bViewRotated = false;
+}
+
+//mouse move event handler
+void OnMouseMove(int x, int y)
+{
+	if (state == 0) {
+		dist += (y - oldY) / 50.0f;
+	}
+	else {
+		rX += (y - oldY) / 5.0f;
+		rY += (x - oldX) / 5.0f;
+		bViewRotated = true;
+	}
+	oldX = x;
+	oldY = y;
+
+	glutPostRedisplay();
+}
+
 //function to get the max (abs) dimension of the given vertex v
 int FindAbsMax(glm::vec3 v) {
 	v = glm::abs(v);
@@ -103,8 +156,7 @@ int FindAbsMax(glm::vec3 v) {
 //main slicing function
 void SliceVolume() {
 
-	//get the max and min distance of each vertex of the unit cube
-	//in the viewing direction
+	//get the max and min distance of each vertex of the unit cube in the viewing direction
 	float max_dist = glm::dot(viewDir, vertexList[0]);
 	float min_dist = max_dist;
 	int max_index = 0;
@@ -268,37 +320,9 @@ void SliceVolume() {
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vTextureSlices), &(vTextureSlices[0].x));
 }
 
-void OnShutdown() {
-	
-}
+//OpenGL initialization
+void InitializeOpenGL() {
 
-//resize event handler
-void OnResize(int w, int h) {
-
-}
-
-//display function
-void display() {
-	
-}
-
-//Keyboard Callback
-void OnKey(unsigned char key, int x, int y) {
-	
-}
-void OnMouseDown(int button, int s, int x, int y)
-{
-	
-}
-
-//mouse move event handler
-void OnMouseMove(int x, int y)
-{
-	
-}
-void InitializeOpenGL()
-{
-	
 	//Load the texture slicing shader
 	render.LoadShaderFromFile(GL_VERTEX_SHADER, "shaders/textureSlicer.vert");
 	render.LoadShaderFromFile(GL_FRAGMENT_SHADER, "shaders/textureSlicer.frag");
@@ -306,38 +330,33 @@ void InitializeOpenGL()
 	//compile and link the shader
 	render.CreateAndLinkProgram();
 	render.UseProgram();
+
 	//add attributes and uniforms
 	render.AddAttribute("vVertex");
 	render.AddUniform("MVP");
 	render.AddUniform("volume");
 	render.AddUniform("delta");
+	
+	
 	//pass constant uniforms at initialization
 	glUniform1i(render("volume"), 0);
 	render.UnUseProgram();
 
-	//GL_CHECK_ERRORS
-
-	//load volume data
-	/*if(LoadVolume()) {
-		std::cout<<"Volume data loaded successfully."<<std::endl;
-	} else {
-		std::cout<<"Cannot load volume data."<<std::endl;
-		exit(EXIT_FAILURE);
-	}*/
-
 	
-	//Texture calls
+
+	//Create 3D Noise and pass it as a Texture to the GPU
 	glEnable(GL_TEXTURE_3D);
 	make3DNoiseTexture();
 	init3DNoiseTexture(Noise3DTexSize, Noise3DTexPtr);
-	//loadTexture(&smileyTexture, MAKEINTRESOURCE(IDBITMAP_SMILEY));
-	//loadTexture();
+	
 	glDisable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	//slice the volume data set initially
+	//SliceVolume();
 
 	//set background colour
-	glClearColor(0.0, 1.0, 0.5, 1.0);
+	glClearColor(bg.r, 1.0, 0.5, bg.a);
 
 	//setup the current camera transform and get the view direction vector
 	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
@@ -351,14 +370,11 @@ void InitializeOpenGL()
 	glGenVertexArrays(1, &volumeVAO);
 	glGenBuffers(1, &volumeVBO);
 
-
 	glBindVertexArray(volumeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
 
 	//pass the sliced vertices vector to buffer object memory
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
-
-	//GL_CHECK_ERRORS
 
 	//enable vertex attribute array for position
 	glEnableVertexAttribArray(0);
@@ -372,54 +388,142 @@ void InitializeOpenGL()
 	cout << "Initialization successfull" << endl;
 }
 
+//release all allocated resources
+void OnShutdown() {
+	render.DeleteShaderProgram();
+
+	glDeleteVertexArrays(1, &volumeVAO);
+	glDeleteBuffers(1, &volumeVBO);
+
+	glDeleteTextures(1, &textureID);
+	
+	cout << "Shutdown successfull" << endl;
+}
+
+//resize event handler
+void OnResize(int w, int h) {
+	//setup the viewport
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	//setup the projection matrix
+	P = glm::perspective(glm::radians(60.0f), (float)w / h, 0.1f, 1000.0f);
+}
+
+//display function
+void OnRender() {
+	
+	//setup the camera transform
+	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
+	glm::mat4 Rx = glm::rotate(Tr, rX, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//get the viewing direction
+	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
+
+	//clear the colour and depth buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//get the combined modelview projection matrix
+	glm::mat4 MVP = P * MV;
+
+
+	//if view is rotated, reslice the volume
+	if (bViewRotated)
+	{
+		SliceVolume();
+	}
+
+	//enable alpha blending (use over operator)
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//bind volume vertex array object
+	glBindVertexArray(volumeVAO);
+
+	//use the volume shader
+	render.UseProgram();
+
+	static float Delta;
+	//pass the shader uniform
+	glUniformMatrix4fv(render("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+	glUniform1f(render("delta"), Delta);
+	Delta += 0.001f;
+	
+	//draw the triangles
+	glDrawArrays(GL_TRIANGLES, 0, sizeof(vTextureSlices) / sizeof(vTextureSlices[0]));
+	
+	//unbind the shader
+	render.UnUseProgram();
+
+	//disable blending
+	glDisable(GL_BLEND);
+
+	//swap front and back buffers to show the rendered result
+	glutSwapBuffers();
+	glutPostRedisplay();
+}
+
+//keyboard function to change the number of slices
+void OnKey(unsigned char key, int x, int y) {
+	switch (key) {
+	case '-':
+		//if(num_slices > -10)
+		num_slices = 0;
+		break;
+
+	case '+':
+		num_slices = num_slices + 5;
+		break;
+	}
+
+	//check the range of num_slices variable
+	//num_slices = min(MAX_SLICES, max(num_slices,3));
+
+	//slice the volume
+	SliceVolume();
+
+	//recall display function
+	glutPostRedisplay();
+}
 
 int main(int argc, char** argv) {
-
-	//Initialize the GLUT library
+	
+	//freeglut initialization
 	glutInit(&argc, argv);
-	
-	//initialized the Depth
-	//Enabled Double Buffers
-	//Set PFD Format structure to RGBA
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	
-	//Setting up the OpenGL Rendering Context
 	glutInitContextVersion(3, 3);
-	
-	//Using Core Profile - Programmable Pipeline
 	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
 	glutInitWindowSize(WIDTH, HEIGHT);
-	glutCreateWindow("Volume Rendering - Aditya Boob");
+	glutCreateWindow("Volume Rendering using 3D Texture Slicing - OpenGL 3.3");
 
 	//glew initialization
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if (GLEW_OK != err) {
-		std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+		cerr << "Error: " << glewGetErrorString(err) << endl;
 	}
 	else {
 		if (GLEW_VERSION_3_3)
 		{
-			std::cout << "Driver supports OpenGL 3.3\nDetails:" << std::endl;
+			cout << "Driver supports OpenGL 3.3\nDetails:" << endl;
 		}
 	}
 	err = glGetError();
 	
-
 	//output hardware information
-	std::cout << "\tUsing GLEW " << glewGetString(GLEW_VERSION) << std::endl;
-	std::cout << "\tVendor: " << glGetString(GL_VENDOR) << std::endl;
-	std::cout << "\tRenderer: " << glGetString(GL_RENDERER) << std::endl;
-	std::cout << "\tVersion: " << glGetString(GL_VERSION) << std::endl;
-	std::cout << "\tGLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+	cout << "\tUsing GLEW " << glewGetString(GLEW_VERSION) << endl;
+	cout << "\tVendor: " << glGetString(GL_VENDOR) << endl;
+	cout << "\tRenderer: " << glGetString(GL_RENDERER) << endl;
+	cout << "\tVersion: " << glGetString(GL_VERSION) << endl;
+	cout << "\tGLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
+	//GL_CHECK_ERRORS
 
 	//OpenGL initialization
 	InitializeOpenGL();
 
 	//callback hooks
 	glutCloseFunc(OnShutdown);
-	glutDisplayFunc(display);
+	glutDisplayFunc(OnRender);
 	glutReshapeFunc(OnResize);
 	glutMouseFunc(OnMouseDown);
 	glutMotionFunc(OnMouseMove);
