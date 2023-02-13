@@ -435,7 +435,7 @@ int main(int argc, char** argv) {
 	glutInitContextVersion(3, 3);
 	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
 	glutInitWindowSize(WIDTH, HEIGHT);
-	glutCreateWindow("Volume Rendering using 3D Texture Slicing - OpenGL 3.3");
+	glutCreateWindow("Volume Rendering - Perlin Noise - Aditya Boob");
 
 	//glew initialization
 	glewExperimental = GL_TRUE;
