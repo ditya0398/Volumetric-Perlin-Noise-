@@ -17,7 +17,7 @@ Renderer::~Renderer(void)
 {
 	_attributeList.clear();
 	_uniformLocationList.clear();
-}
+} 
 
 //Loads the shader from the External File
 void Renderer::LoadShaderFromFile(GLenum whichShader, const string& filename) {
@@ -67,7 +67,26 @@ void Renderer::AddAttribute(const string& attribute) {
 	_attributeList[attribute] = glGetAttribLocation(_program, attribute.c_str());
 }
 
+void Renderer::init()
+{
+	//Load the texture slicing shader
+	LoadShaderFromFile(GL_VERTEX_SHADER, "shaders/textureSlicer.vert");
+	LoadShaderFromFile(GL_FRAGMENT_SHADER, "shaders/textureSlicer.frag");
 
+	//compile and link the shader
+	CreateAndLinkProgram();
+	UseProgram();
+
+	//add attributes and uniforms
+	AddAttribute("vVertex");
+	AddUniform("MVP");
+	AddUniform("volume");
+	AddUniform("delta");
+
+	UnUseProgram();
+
+
+}
 void Renderer::CreateAndLinkProgram() {
 	_program = glCreateProgram();
 	if (_shaders[VERTEX_SHADER] != 0) {

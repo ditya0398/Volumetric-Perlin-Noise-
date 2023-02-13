@@ -10,6 +10,8 @@ class Renderer
 public:
 	Renderer(void);
 	~Renderer(void);
+
+	void init();
 	void LoadShaderFromFile(GLenum whichShader, const string& filename);
 	void CompileShader(GLenum whichShader, const string& source);
 	void CreateAndLinkProgram();

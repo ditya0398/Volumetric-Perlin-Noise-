@@ -323,26 +323,7 @@ void SliceVolume() {
 //OpenGL initialization
 void InitializeOpenGL() {
 
-	//Load the texture slicing shader
-	render.LoadShaderFromFile(GL_VERTEX_SHADER, "shaders/textureSlicer.vert");
-	render.LoadShaderFromFile(GL_FRAGMENT_SHADER, "shaders/textureSlicer.frag");
-
-	//compile and link the shader
-	render.CreateAndLinkProgram();
-	render.UseProgram();
-
-	//add attributes and uniforms
-	render.AddAttribute("vVertex");
-	render.AddUniform("MVP");
-	render.AddUniform("volume");
-	render.AddUniform("delta");
-	
-	
-	//pass constant uniforms at initialization
-	glUniform1i(render("volume"), 0);
-	render.UnUseProgram();
-
-	
+	render.init();
 
 	//Create 3D Noise and pass it as a Texture to the GPU
 	glEnable(GL_TEXTURE_3D);
@@ -441,7 +422,8 @@ void OnRender() {
 
 	//use the volume shader
 	render.UseProgram();
-
+	//pass constant uniforms at initialization
+	glUniform1i(render("volume"), 0);
 	static float Delta;
 	//pass the shader uniform
 	glUniformMatrix4fv(render("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
