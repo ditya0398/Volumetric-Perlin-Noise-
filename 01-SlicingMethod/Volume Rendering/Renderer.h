@@ -13,6 +13,14 @@ public:
 	void LoadShaderFromFile(GLenum whichShader, const string& filename);
 	void CompileShader(GLenum whichShader, const string& source);
 	void CreateAndLinkProgram();
+	void UseProgram();
+	void UnUseProgram();
+	//An indexer that returns the location of the attribute/uniform
+	GLuint operator[](const string& attribute);
+	GLuint operator()(const string& uniform);
+	void DeleteShaderProgram();
+	void AddAttribute(const string& attribute);
+	void AddUniform(const string& uniform);
 
 
 private:
