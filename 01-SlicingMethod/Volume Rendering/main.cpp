@@ -8,6 +8,9 @@
 #include <fstream>
 #include <algorithm>
 #include "Renderer.h"
+#include "Noise.h"
+
+
 const float EPSILON = 0.0001f;
 #ifdef _DEBUG 
 #pragma comment(lib,"opengl32.lib")//for linking
