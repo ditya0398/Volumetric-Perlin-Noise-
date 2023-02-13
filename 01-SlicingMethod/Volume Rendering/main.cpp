@@ -41,18 +41,15 @@ float rX = 4, rY = 50, dist = -2;
 //modelview and projection matrices
 glm::mat4 MV, P;
 
-//volume vertex array and buffer objects
-GLuint volumeVBO;
-GLuint volumeVAO;
+
 
 //3D texture slicing shader
 Renderer render;
 
+
+
 //maximum number of slices
 const int MAX_SLICES = 512;
-
-//sliced vertices
-glm::vec3 vTextureSlices[MAX_SLICES * 12];
 
 //background colour
 glm::vec4 bg = glm::vec4(0.5, 0.5, 1, 1);
@@ -312,12 +309,12 @@ void SliceVolume() {
 
 		//Using the indices, pass the intersection vertices to the vTextureSlices vector
 		for (int i = 0; i < 12; i++)
-			vTextureSlices[count++] = intersection[indices[i]];
+			render.vTextureSlices[count++] = intersection[indices[i]];
 	}
 
 	//update buffer object with the new vertices
-	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vTextureSlices), &(vTextureSlices[0].x));
+	glBindBuffer(GL_ARRAY_BUFFER, render.volumeVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(render.vTextureSlices), &(render.vTextureSlices[0].x));
 }
 
 //OpenGL initialization
@@ -326,18 +323,8 @@ void InitializeOpenGL() {
 	render.init();
 
 	//Create 3D Noise and pass it as a Texture to the GPU
-	glEnable(GL_TEXTURE_3D);
 	make3DNoiseTexture();
 	init3DNoiseTexture(Noise3DTexSize, Noise3DTexPtr);
-	
-	glDisable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	//slice the volume data set initially
-	//SliceVolume();
-
-	//set background colour
-	glClearColor(bg.r, 1.0, 0.5, bg.a);
 
 	//setup the current camera transform and get the view direction vector
 	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
@@ -347,34 +334,18 @@ void InitializeOpenGL() {
 	//get the current view direction vector
 	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
 
-	//setup the vertex array and buffer objects
-	glGenVertexArrays(1, &volumeVAO);
-	glGenBuffers(1, &volumeVBO);
-
-	glBindVertexArray(volumeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
-
-	//pass the sliced vertices vector to buffer object memory
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
-
-	//enable vertex attribute array for position
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindVertexArray(0);
-
 	//slice the volume dataset initially
 	SliceVolume();
 
-	cout << "Initialization successfull" << endl;
+	std::cout << "Initialization successfull" << endl;
 }
 
 //release all allocated resources
 void OnShutdown() {
 	render.DeleteShaderProgram();
 
-	glDeleteVertexArrays(1, &volumeVAO);
-	glDeleteBuffers(1, &volumeVBO);
+	glDeleteVertexArrays(1, &render.volumeVAO);
+	glDeleteBuffers(1, &render.volumeVBO);
 
 	glDeleteTextures(1, &textureID);
 	
@@ -383,11 +354,12 @@ void OnShutdown() {
 
 //resize event handler
 void OnResize(int w, int h) {
-	//setup the viewport
-	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+
+	render.ResizeViewport(0, 0, w, h);
 	//setup the projection matrix
 	P = glm::perspective(glm::radians(60.0f), (float)w / h, 0.1f, 1000.0f);
 }
+
 
 //display function
 void OnRender() {
@@ -418,7 +390,7 @@ void OnRender() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//bind volume vertex array object
-	glBindVertexArray(volumeVAO);
+	glBindVertexArray(render.volumeVAO);
 
 	//use the volume shader
 	render.UseProgram();
@@ -431,7 +403,7 @@ void OnRender() {
 	Delta += 0.001f;
 	
 	//draw the triangles
-	glDrawArrays(GL_TRIANGLES, 0, sizeof(vTextureSlices) / sizeof(vTextureSlices[0]));
+	glDrawArrays(GL_TRIANGLES, 0, sizeof(render.vTextureSlices) / sizeof(render.vTextureSlices[0]));
 	
 	//unbind the shader
 	render.UnUseProgram();

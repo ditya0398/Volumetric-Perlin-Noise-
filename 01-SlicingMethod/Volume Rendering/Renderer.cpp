@@ -1,7 +1,7 @@
 #include "Renderer.h"
 #include <iostream>
-
 #include <fstream>
+
 
 Renderer::Renderer(void)
 {
@@ -66,6 +66,24 @@ void Renderer::CompileShader(GLenum type, const string& source) {
 void Renderer::AddAttribute(const string& attribute) {
 	_attributeList[attribute] = glGetAttribLocation(_program, attribute.c_str());
 }
+void Renderer::CreateVAOandVBO()
+{
+	//setup the vertex array and buffer objects
+	glGenVertexArrays(1, &volumeVAO);
+	glGenBuffers(1, &volumeVBO);
+
+	glBindVertexArray(volumeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
+
+	//pass the sliced vertices vector to buffer object memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
+
+	//enable vertex attribute array for position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindVertexArray(0);
+}
 
 void Renderer::init()
 {
@@ -84,6 +102,14 @@ void Renderer::init()
 	AddUniform("delta");
 
 	UnUseProgram();
+	CreateVAOandVBO();
+
+	glEnable(GL_TEXTURE_3D);
+	SetBackgroundColor(1.0, 1.0, 0.0);
+
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
 
 }
@@ -126,6 +152,16 @@ void Renderer::UnUseProgram() {
 	glUseProgram(0);
 }
 
+void Renderer::ResizeViewport(int start, int end, float width, float height)
+{
+	//setup the viewport
+	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+}
+
+void Renderer::SetBackgroundColor(float r, float g, float b)
+{
+	glClearColor(r, g, b , 1.0);
+}
 GLuint Renderer::operator [](const string& attribute) {
 	return _attributeList[attribute];
 }
