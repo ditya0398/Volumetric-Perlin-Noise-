@@ -316,7 +316,7 @@ void make3DNoiseTexture()
 	Noise3DTexPtr = (GLubyte*)malloc(Noise3DTexSize * Noise3DTexSize * Noise3DTexSize * 4);
 	for (f = 0, inc = 0; f < numOctaves; ++f, frequency *= 2, ++inc, amp *= 0.5)
 	{
-		//wxGetApp().Statusf("Generating 3D noise: octave %d/%d...", f + 1, numOctaves);
+		
 		SetNoiseFrequency(frequency);
 		ptr = Noise3DTexPtr;
 		ni[0] = ni[1] = ni[2] = 0;
@@ -333,6 +333,5 @@ void make3DNoiseTexture()
 			}
 		}
 	}
-//	wxGetApp().Ready();
 }
 

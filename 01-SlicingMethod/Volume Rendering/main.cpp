@@ -326,6 +326,14 @@ void InitializeOpenGL()
 	}*/
 
 	
+	//Texture calls
+	glEnable(GL_TEXTURE_3D);
+	make3DNoiseTexture();
+	init3DNoiseTexture(Noise3DTexSize, Noise3DTexPtr);
+	//loadTexture(&smileyTexture, MAKEINTRESOURCE(IDBITMAP_SMILEY));
+	//loadTexture();
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
 	//set background colour
