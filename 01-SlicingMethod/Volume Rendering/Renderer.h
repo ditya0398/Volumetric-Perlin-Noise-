@@ -14,13 +14,9 @@ public:
 	//volume vertex array and buffer objects
 	GLuint volumeVBO;
 	GLuint volumeVAO;
-	
-
 	//sliced vertices
 	glm::vec3 vTextureSlices[512 * 12];
 	
-
-
 	Renderer(void);
 	~Renderer(void);
 
@@ -39,6 +35,7 @@ public:
 	GLuint operator[](const string& attribute);
 	GLuint operator()(const string& uniform);
 	void DeleteShaderProgram();
+	void DeleteBuffers();
 	void AddAttribute(const string& attribute);
 	void AddUniform(const string& uniform);
 

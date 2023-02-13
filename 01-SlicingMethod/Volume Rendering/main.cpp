@@ -46,16 +46,11 @@ glm::mat4 MV, P;
 //3D texture slicing shader
 Renderer render;
 
-
-
 //maximum number of slices
 const int MAX_SLICES = 512;
 
 //background colour
 glm::vec4 bg = glm::vec4(0.5, 0.5, 1, 1);
-
-//volume data files
-const std::string volume_file = "../media/Engine256.raw";
 
 //dimensions of volume data
 const int XDIM = 128;
@@ -65,8 +60,6 @@ const int ZDIM = 128;
 //total number of slices current used
 int num_slices = 0;
 GLuint delta;
-//OpenGL volume texture id
-GLuint textureID;
 
 //flag to see if the view is rotated
 //volume is resliced if the view is rotated
@@ -343,12 +336,7 @@ void InitializeOpenGL() {
 //release all allocated resources
 void OnShutdown() {
 	render.DeleteShaderProgram();
-
-	glDeleteVertexArrays(1, &render.volumeVAO);
-	glDeleteBuffers(1, &render.volumeVBO);
-
-	glDeleteTextures(1, &textureID);
-	
+	render.DeleteBuffers();
 	cout << "Shutdown successfull" << endl;
 }
 

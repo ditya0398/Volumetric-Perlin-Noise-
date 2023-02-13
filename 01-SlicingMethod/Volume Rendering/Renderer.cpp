@@ -66,6 +66,7 @@ void Renderer::CompileShader(GLenum type, const string& source) {
 void Renderer::AddAttribute(const string& attribute) {
 	_attributeList[attribute] = glGetAttribLocation(_program, attribute.c_str());
 }
+
 void Renderer::CreateVAOandVBO()
 {
 	//setup the vertex array and buffer objects
@@ -113,6 +114,7 @@ void Renderer::init()
 
 
 }
+
 void Renderer::CreateAndLinkProgram() {
 	_program = glCreateProgram();
 	if (_shaders[VERTEX_SHADER] != 0) {
@@ -162,6 +164,7 @@ void Renderer::SetBackgroundColor(float r, float g, float b)
 {
 	glClearColor(r, g, b , 1.0);
 }
+
 GLuint Renderer::operator [](const string& attribute) {
 	return _attributeList[attribute];
 }
@@ -172,6 +175,14 @@ void Renderer::AddUniform(const string& uniform) {
 void Renderer::DeleteShaderProgram() {
 	glDeleteProgram(_program);
 }
+
+void Renderer::DeleteBuffers()
+{
+	glDeleteVertexArrays(1, &volumeVAO);
+	glDeleteBuffers(1, &volumeVBO);
+
+}
+
 GLuint Renderer::operator()(const string& uniform) {
 	return _uniformLocationList[uniform];
 }
